@@ -1,43 +1,57 @@
+const axios = require('axios')
+const MongoClient = require('mongodb').MongoClient;
+const mongoParams = { useNewUrlParser: true, useUnifiedTopology: true };
+const url = 'mongodb://127.0.0.1:27017/';
+const api_rain = 'http://api2.thaiwater.net:9200/api/v1/thaiwater30/public/rain_24h';
+const api_water = 'http://api2.thaiwater.net:9200/api/v1/thaiwater30/public/waterlevel_load';
 
-const data = require('./json/cqahml.json');
+let client = new MongoClient(url, mongoParams);
 
-const fs = require('fs');
-const xml2js = require('xml2js');
-const xml = fs.readFileSync('2D_Base.kml');
-
-xml2js.parseString(xml, { mergeAttrs: true }, (err, result) => {
+client.connect(async err => {
   if (err) {
-    throw err;
+    console.log(err.message);
+    throw new Error("failed to connect");
   }
 
-  let random = Math.random().toString(36).substring(7);
-  //array ที่สนใจ
-  let myObj = {
-    center_of_map: [],
-    blue_polygons: [],
-    boundary: []
+  let datab = client.db("rtfloodbma");
+  console.log("db connected");
+
+  try {
+    await axios.get(api_rain).then(res => {
+      try {
+        datab.collection("rain").insertOne(res.data);
+        console.log("insert succeeded");
+      } catch (err) {
+        console.log("insert failed");
+        console.log(err.message);
+      }
+    });
+  } catch (err) {
+    throw Error("axios get did not work");
+  }
+});
+
+client.connect(async err => {
+  if (err) {
+    console.log(err.message);
+    throw new Error("failed to connect");
   }
 
-  // map mok data
-  const Document = data.kml.Document.map(doc_item => {
-    let param_doc = [];
-    param_doc = doc_item;
-    return param_doc
-  })
-  const Folder = data.kml.Document[0].Folder.map(blue_item => {
-    let param_blue = [];
-    param_blue = blue_item;
-    return param_blue;
-  })
+  let datab = client.db("rtfloodbma");
+  console.log("db connected");
 
-  // add new data to array ที่สนใจ
-  myObj.center_of_map.push({ LookAt: Document[0].LookAt })
-  myObj.blue_polygons.push({ name: Folder[4].name }, { Style: Folder[4].Style }, { Placemark: Folder[4].Placemark })
-  myObj.boundary.push({ name: Folder[6].name }, { Style: Folder[6].name }, { Placemark: Folder[6].name })
-
-  // เขียนใส่ file json
-  const json = JSON.stringify(myObj, null, 2);
-  fs.writeFileSync('json/' + random + "_new" + '.json', json);
-
+  try {
+    await axios.get(api_water).then(res => {
+      try {
+        datab.collection("water").insertOne(res.data);
+        console.log("insert succeeded");
+      } catch (err) {
+        console.log("insert failed");
+        console.log(err.message);
+      }
+    });
+  } catch (err) {
+    throw Error("axios get did not work");
+  }
 });
 
