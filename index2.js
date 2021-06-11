@@ -17,7 +17,7 @@ xml2js.parseString(xml, { mergeAttrs: true }, (err, result) => {
   }
 
   let random = Math.random().toString(36).substring(7);
-  array ที่สนใจ
+  //array ที่สนใจ
   let myObj = {
     center_of_map: [],
     blue_polygons: [],
