@@ -15,31 +15,18 @@ client.connect(async err => {
 
   let datab = client.db("rtfloodbma");
   console.log("db connected");
-
   try {
     await axios.get(api_rain).then(res => {
       try {
         datab.collection("rain").insertOne(res.data);
         console.log("insert succeeded");
       } catch (err) {
-        console.log("insert failed");
-        console.log(err.message);
+        console.log("insert failed", err.message);
       }
     });
   } catch (err) {
     throw Error("axios get did not work");
   }
-});
-
-client.connect(async err => {
-  if (err) {
-    console.log(err.message);
-    throw new Error("failed to connect");
-  }
-
-  let datab = client.db("rtfloodbma");
-  console.log("db connected");
-
   try {
     await axios.get(api_water).then(res => {
       try {
@@ -54,4 +41,6 @@ client.connect(async err => {
     throw Error("axios get did not work");
   }
 });
+
+
 
