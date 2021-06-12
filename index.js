@@ -25,13 +25,14 @@ client.connect(async err => {
 
       const allRain = response.data.data;
 
-      let datas = [];
+      let datas = allRain.filter(data => data.geocode.amphoe_name.th === "ทุ่งสง");
+      // console.log(datas);
 
-      for (let i = 0; i < allRain.length; i++) {
-        if (allRain[i].geocode.amphoe_name.th === "ทุ่งสง") {
-          datas.push(allRain[i]);
-        }
-      }
+      // for (let i = 0; i < allRain.length; i++) {
+      //   if (allRain[i].geocode.amphoe_name.th === "ทุ่งสง") {
+      //     datas.push(allRain[i]);
+      //   }
+      // }
 
       const random = Math.random().toString(36).substring(7);
 
