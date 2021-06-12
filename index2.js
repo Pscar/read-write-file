@@ -1,9 +1,8 @@
 const data = require('./json/cqahml.json');
 const fs = require('fs');
-
-const fs = require('fs');
 const xml2js = require('xml2js');
 const xml = fs.readFileSync('2D_Base.kml');
+const api_rain = 'http://api2.thaiwater.net:9200/api/v1/thaiwater30/public/rain_24h';
 
 xml2js.parseString(xml, { mergeAttrs: true }, (err, result) => {
   if (err) {
