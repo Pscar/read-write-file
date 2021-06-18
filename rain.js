@@ -11,7 +11,7 @@ db.once('open', async () => {
   console.log("Connection Successful!");
 
   // define Schema
-  var RainSchema = mongoose.Schema({
+  const RainSchema = mongoose.model('rain', new mongoose.Schema({
     id: String,
     rain_24h: String,
     rainfall_datetime: String,
@@ -63,42 +63,47 @@ db.once('open', async () => {
         th: String,
         en: String
       }
-    }
-  });
+    },
+    _id: String
+  }));
 
-  // compile schema to model
-  var Rain = mongoose.model('Rain', RainSchema, 'rain');
-
-  //get data axios 
   const getDataRain = async () => {
-    let param_axios = await axios.get('http://api2.thaiwater.net:9200/api/v1/thaiwater30/public/rain_24h')
-      .then((response) => {
-        const allRain = response.data.data;
-        let datas = allRain.filter(data => data.geocode.amphoe_name.th === "ทุ่งสง");
-        for (let item of datas) {
-          item._id = `${item.id}_${item.station.id}`;
-        }
-        return datas;
-      }).catch(error => console.log(error));
-    return param_axios;
-  }
-  // documents array
-  let param_getDataRain = await getDataRain()
-
-  //save multiple documents to the collection referenced by Rain Model
-  Rain.collection.insertMany(param_getDataRain, function (err, docs) {
-    if (err) {
-      return console.error(err);
-    } else {
-      console.log("Multiple documents inserted to Collection");
+    try {
+      //response
+      const req = axios.get('http://api2.thaiwater.net:9200/api/v1/thaiwater30/public/rain_24h');
+      const res = await req;
+      const datas = res.data.data;
+      //filter
+      let data = datas.filter(data => data.geocode.amphoe_name.th === 'ทุ่งสง');
+      //gen _id object
+      for (let item of data) {
+        item._id = `${item.id}_${item.station.id}`;
+      }
+      // data filter + gen_id object
+      return data;
+    } catch (error) {
+      console.log(error)
     }
-  });
+  }
+
+  // documents array
+  let dataRain = await getDataRain()
+
+  for (let item of dataRain) {
+    // console.log("data => ",item)
+    const res = await RainSchema.updateOne({ _id: item._id }, item, { upsert: true });
+    // console.log(res.n);
+    // console.log(res.nModified);
+    res.n;
+    res.nModified;
+  }
 
   const writeFiles = async () => {
     const random = Math.random().toString(36).substring(7);
-    const json = await JSON.stringify(param_getDataRain, null, 2);
-    fs.writeFileSync('json/' + random + "_new" + '.json', json);
+    const json = await JSON.stringify(dataRain, null, 2);
+    fs.writeFileSync('json_rain/' + random + '_new' + '.json', json);
+    console.log("writeFiles");
   }
   writeFiles();
-  
+
 });
