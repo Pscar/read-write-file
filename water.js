@@ -1,7 +1,7 @@
 const axios = require('axios')
 const fs = require('fs');
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/rtfloodbma', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb+srv://rtfloodbma:weather2Project@cluster0.198m3.mongodb.net/rtfloodbma?authSource=admin&replicaSet=atlas-56rm44-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true', { useNewUrlParser: true, useUnifiedTopology: true });
 
 var db = mongoose.connection;
 
@@ -111,7 +111,7 @@ db.once('open', async () => {
   let dataWater = await getDataWater()
 
   for (let item of dataWater) {
-    console.log("data => ",item)
+    // console.log("data => ",item)
     const res = await WaterSchema.updateOne({ _id: item._id }, item, { upsert: true });
     // console.log(res.n);
     // console.log(res.nModified);

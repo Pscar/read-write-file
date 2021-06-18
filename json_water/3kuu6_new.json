@@ -1,10 +1,10 @@
 [
   {
-    "id": 495221902,
-    "waterlevel_datetime": "2021-06-18 12:30",
+    "id": 495318343,
+    "waterlevel_datetime": "2021-06-18 18:10",
     "waterlevel_m": null,
     "waterlevel_msl": "51.16",
-    "waterlevel_msl_previous": "51.16",
+    "waterlevel_msl_previous": "51.15",
     "flow_rate": null,
     "discharge": null,
     "storage_percent": "12.68",
@@ -74,7 +74,7 @@
         "th": "นครศรีธรรมราช"
       }
     },
-    "_id": "495221902_795",
+    "_id": "495318343_795",
     "$setOnInsert": {
       "__v": 0
     }
