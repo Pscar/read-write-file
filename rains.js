@@ -1,7 +1,7 @@
 const axios = require('axios')
 const fs = require('fs');
 const mongoose = require('mongoose');
-mongoose.connect('mongodb+srv://rtfloodbma:weather2Project@cluster0.198m3.mongodb.net/rtfloodbma?authSource=admin&replicaSet=atlas-56rm44-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb://127.0.0.1:27017/rtfloodbma?readPreference=primary&appname=MongoDB%20Compass&ssl=false', { useNewUrlParser: true, useUnifiedTopology: true });
 
 var db = mongoose.connection;
 
@@ -11,7 +11,7 @@ db.once('open', async () => {
   console.log("Connection Successful!");
 
   // define Schema
-  const RainSchema = mongoose.model('rain', new mongoose.Schema({
+  const RainSchema = mongoose.model('rains', new mongoose.Schema({
     id: String,
     rain_24h: String,
     rainfall_datetime: String,
