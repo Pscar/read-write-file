@@ -16,7 +16,7 @@ const get_rain = async () => {
   }
 }
 
-const writeFile = async () => {
+/*const writeFile = async () => {
   let get_rains = await get_rain();
   const random = Math.random().toString(36).substring(7);
   const json = await JSON.stringify(get_rains, null, 2);
@@ -24,4 +24,4 @@ const writeFile = async () => {
   console.log('writeFile');
 }
 
-writeFile();
+writeFile();*/

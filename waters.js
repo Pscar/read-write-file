@@ -14,11 +14,11 @@ const get_water = async () => {
   }
 }
 
-const writeFile = async () => {
+/*const writeFile = async () => {
   let get_waters = await get_water();
   const random = Math.random().toString(36).substring(7);
   const json = await JSON.stringify(get_waters, null, 2);
   fs.writeFileSync('json_water/' + random + '_new' + '.json', json);
   console.log('writeFile');
 }
-writeFile();
+writeFile();*/
