@@ -15,7 +15,7 @@ const get_rain = async () => {
     console.log(error)
   }
 }
-
+get_rain();
 /*const writeFile = async () => {
   let get_rains = await get_rain();
   const random = Math.random().toString(36).substring(7);

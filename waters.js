@@ -13,7 +13,7 @@ const get_water = async () => {
     console.log(error)
   }
 }
-
+get_water();
 /*const writeFile = async () => {
   let get_waters = await get_water();
   const random = Math.random().toString(36).substring(7);
