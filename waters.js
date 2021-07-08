@@ -4,7 +4,7 @@ const fs = require('fs');
 const get_water = async () => {
   try {
     //response
-    const response = axios.get('http://www.rtfloodbma.com/api/fetch_waters');
+    const response = axios.get('https://rtfloodbma.com/api/waters/fetch');
     const request = await response;
     const data = request.data;
     return data;

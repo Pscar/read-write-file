@@ -5,7 +5,7 @@ const fs = require('fs');
 const get_rain = async () => {
   try {
     //response
-    const response = axios.get('http://www.rtfloodbma.com/api/fetch_rains');
+    const response = axios.get('https://rtfloodbma.com/api/rains/fetch');
     const request = await response;
     const data = request.data;
 
