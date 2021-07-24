@@ -17,7 +17,6 @@ con.connect(function (err) {
     if (err) throw err;
     for (const data of result) {
       const url = `https://weather.ckartisan.com/storage/${data.kmls}`;
-      console.log(url);
       // let random = Math.random().toString(36).substring(7);
       // const dir = __dirname + "/upload";
       // fs.mkdirSync(dir);
