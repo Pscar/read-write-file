@@ -17,16 +17,17 @@ con.connect(function (err) {
     if (err) throw err;
     for (const data of result) {
       const url = `https://weather.ckartisan.com/storage/${data.kmls}`;
-      let random = Math.random().toString(36).substring(7);
+      console.log(url);
+      // let random = Math.random().toString(36).substring(7);
       // const dir = __dirname + "/upload";
       // fs.mkdirSync(dir);
-      const output = ` ${random}.zip`;
-      request({ url: url, encoding: null }, function (err, resp, body) {
-        if (err) throw err;
-        fs.writeFileSync(output, body, function (err) {
-          console.log("file written!");
-        });
-      });
+      // const output = ` ${random}.zip`;
+      // request({ url: url, encoding: null }, function (err, resp, body) {
+      //   if (err) throw err;
+      //   fs.writeFileSync(output, body, function (err) {
+      //     console.log("file written!");
+      //   });
+      // });
     }
   });
 });
