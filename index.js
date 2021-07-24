@@ -1,34 +1,32 @@
 const mysql = require("mysql");
-const { DownloaderHelper } = require("node-downloader-helper");
-const path = require("path");
-const filePath = path.join(__dirname, "/pictures");
+const config = require("./config");
 
-// const fs = require("fs");
-// const path = require("path");
-// const axios = require("axios");
+const AdmZip = require("adm-zip");
+const request = require("request");
 
-var con = mysql.createConnection({
-  host: "weather.ckartisan.com",
-  user: "weather",
-  password: "weather",
-});
-
-var con = mysql.createConnection({
-  host: "weather.ckartisan.com",
-  user: "weather",
-  password: "weather",
-  database: "weather",
+const con = mysql.createConnection({
+  host: config.db.host,
+  user: config.db.user,
+  password: config.db.password,
+  database: config.db.database,
 });
 
 con.connect(function (err) {
   if (err) throw err;
   con.query("SELECT kmls FROM weathers", function (err, result, fields) {
     if (err) throw err;
-    for (let data of result) {
+    for (const data of result) {
       const url = `https://weather.ckartisan.com/storage/${data.kmls}`;
-      const dl = new DownloaderHelper(url, filePath);
-      dl.on("end", () => console.log("Download Completed"));
-      dl.start();
+      request.get({ url: url, encoding: null }, (err, res, body) => {
+        const zip = new AdmZip(body);
+        const zipEntries = zip.getEntries();
+        console.log(zipEntries.length);
+
+        zipEntries.forEach((entry) => {
+          if (entry.entryName.match(/readme/i))
+            console.log(zip.readAsText(entry));
+        });
+      });
     }
   });
 });
