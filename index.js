@@ -1,7 +1,7 @@
 const mysql = require("mysql");
 const config = require("./config");
 
-const AdmZip = require("adm-zip");
+const fs = require("fs");
 const request = require("request");
 
 const con = mysql.createConnection({
@@ -17,19 +17,20 @@ con.connect(function (err) {
     if (err) throw err;
     for (const data of result) {
       const url = `https://weather.ckartisan.com/storage/${data.kmls}`;
-      request.get({ url: url, encoding: null }, (err, res, body) => {
-        const zip = new AdmZip(body);
-        const zipEntries = zip.getEntries();
-        console.log(zipEntries.length);
-
-        zipEntries.forEach((entry) => {
-          if (entry.entryName.match(/readme/i))
-            console.log(zip.readAsText(entry));
+      let random = Math.random().toString(36).substring(7);
+      // const dir = __dirname + "/upload";
+      // fs.mkdirSync(dir);
+      const output = ` ${random}.zip`;
+      request({ url: url, encoding: null }, function (err, resp, body) {
+        if (err) throw err;
+        fs.writeFileSync(output, body, function (err) {
+          console.log("file written!");
         });
       });
     }
   });
 });
+
 // const data = require('./o2s6uc.json');
 // const fs = require('fs');
 
