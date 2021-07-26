@@ -1,35 +1,64 @@
-const mysql = require("mysql");
+const { Sequelize, QueryTypes } = require("sequelize");
+const fs = require("fs");
+const axios = require("axios");
+const unzipper = require('unzipper');
 const config = require("./config");
 
-const fs = require("fs");
-const request = require("request");
-
-const con = mysql.createConnection({
-  host: config.db.host,
-  user: config.db.user,
-  password: config.db.password,
-  database: config.db.database,
-});
-
-con.connect(function (err) {
-  if (err) throw err;
-  con.query("SELECT kmls FROM weathers", function (err, result, fields) {
-    if (err) throw err;
-    for (const data of result) {
-      const url = `https://weather.ckartisan.com/storage/${data.kmls}`;
-      // let random = Math.random().toString(36).substring(7);
-      // const dir = __dirname + "/upload";
-      // fs.mkdirSync(dir);
-      // const output = ` ${random}.zip`;
-      // request({ url: url, encoding: null }, function (err, resp, body) {
-      //   if (err) throw err;
-      //   fs.writeFileSync(output, body, function (err) {
-      //     console.log("file written!");
-      //   });
-      // });
-    }
+const sequelize = new Sequelize(
+  `mysql://${config.db.user}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.database}`
+);
+const getWeather = async () => {
+  const weathers = await sequelize.query("SELECT kmls FROM `weathers`", {
+    type: QueryTypes.SELECT,
   });
-});
+  const kmls = weathers.map((item) => item.kmls);
+  for (const data of kmls) {
+    const url = `https://weather.ckartisan.com/storage/${data}`;
+    let random = Math.random().toString(36).substring(7);
+    const output = `kmls/${random}.zip`;
+    try {
+      const response = await axios.get(url, { responseType: "arraybuffer" });
+      fs.writeFileSync(output, response.data, (err) => {
+        if (err) throw err;
+        console.log("The file has been saved!");
+      });
+      fs.createReadStream(output).pipe(
+        unzipper.Extract({ path: `data/${output}` })
+      );
+    } catch (error) {
+      console.log(error);
+    }
+    break;
+  }
+};
+
+getWeather();
+// const con = mysql.createConnection({
+//   host: config.db.host,
+//   user: config.db.user,
+//   password: config.db.password,
+//   database: config.db.database,
+// });
+
+// con.connect(function (err) {
+//   if (err) throw err;
+//   con.query("SELECT kmls FROM weathers", function (err, result, fields) {
+//     if (err) throw err;
+//     for (const data of result) {
+//       const url = `https://weather.ckartisan.com/storage/${data.kmls}`;
+//       // let random = Math.random().toString(36).substring(7);
+//       // const dir = __dirname + "/upload";
+//       // fs.mkdirSync(dir);
+//       // const output = ` ${random}.zip`;
+//       // request({ url: url, encoding: null }, function (err, resp, body) {
+//       //   if (err) throw err;
+//       //   fs.writeFileSync(output, body, function (err) {
+//       //     console.log("file written!");
+//       //   });
+//       // });
+//     }
+//   });
+// });
 
 // const data = require('./o2s6uc.json');
 // const fs = require('fs');

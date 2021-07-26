@@ -4,6 +4,7 @@ const config = {
     user: "weather",
     password: "weather",
     database: "weather",
+    port: 3306,
   },
 };
 
