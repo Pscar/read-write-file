@@ -3,6 +3,10 @@ const fs = require("fs");
 const axios = require("axios");
 const unzipper = require("unzipper");
 const config = require("./config");
+const xml2js = require("xml2js");
+const walk = require("walk");
+const { r } = require("tar");
+
 // const dotenv = require('dotenv');
 // dotenv.config();
 
@@ -17,7 +21,7 @@ const getWeather = async () => {
   // map weathers to kmls
   const kmls = await weathers.map((item) => item.kmls);
   // loop array kmls in database
-  for (const data of kmls) {
+  for await (const data of kmls) {
     // string kmls to array
     const url = `https://weather.ckartisan.com/storage/${data}`;
     // random name for zip file
@@ -34,25 +38,32 @@ const getWeather = async () => {
         console.log("The file has been saved!");
       });
       // unzip file to kmls folder
-      await fs.createReadStream(output).pipe(unzipper.Extract({ path: `data/${randomNameZip}` }));
-      const file = fs.readFileSync(`data/${randomNameZip}/2D_Base.kml`, "utf8");
-      console.log(file);
+      // const writer = unzipper.Extract({ path: `data/${randomNameZip}` });
+      // reader.on("end", () => {
+      //   readFile(randomNameZip);
+      // });
+      
+      const reader = await fs.createReadStream(output);
+      reader.pipe(unzipper.Extract({ path: `data/${randomNameZip}` }));
 
+      const walker = walk.walk(`./data`, { followLinks: false });
+      const files = [];
+      walker.on("file", function (root, stat, next) {
+        files.push(`${stat.name}`);
+        next();
+      });
 
-      // fs.writeFileSync("json/" + random + "_new" + ".json", json);
-      // await fs.createReadStream(output).pipe(
-      //   unzipper
-      //     .Extract({ path: `data/${randomNameZip}` })
-      //     .on("entry", function (entry) {
-      //       const fileName = entry.path;
-      //       console.log(fileName);
-      //       if (fileName === "2D_Base.kml") {
-      //         entry.pipe(fs.createWriteStream(`data/${randomNameZip}`));
-      //       } else {
-      //         entry.autodrain();
-      //       }
-      //     })
-      // );
+      walker.on("end", function () {
+        const xml = files.filter((file) => file === "2D_Base.kml");
+        xml2js.parseString(xml, { mergeAttrs: true }, (err, result) => {
+          if (err) {
+            throw err;
+          }
+          let random = Math.random().toString(36).substring(7);
+          const json = JSON.stringify(result, null, 2);
+          fs.writeFileSync("json/" + random + "_new" + ".json", json);
+        });
+      });
     } catch (error) {
       console.log("error =>", error);
     }
@@ -60,7 +71,17 @@ const getWeather = async () => {
   }
 };
 
-getWeather();
+// const readFile = (randomNameZip) => {
+//   const xml = fs.readFileSync(`data/${randomNameZip}/2D_Base.kml`);
+//   xml2js.parseString(xml, { mergeAttrs: true }, (err, result) => {
+//     if (err) {
+//       throw err;
+//     } else {
+//       console.log(result);
+//     }
+//   });
+// };
+
 // const file = fs.readFileSync(`data/${output}/2D_Base.kml`, "utf8");
 // console.log(file);
 // const readFile = () => {
@@ -162,3 +183,5 @@ getWeather();
 //   fs.writeFileSync('json/' + random + "_new" + '.json', json);
 // }
 // writeFile();
+
+getWeather();
