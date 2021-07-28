@@ -3,9 +3,10 @@ const fs = require("fs");
 const axios = require("axios");
 const unzipper = require("unzipper");
 const config = require("./config");
-const xml2js = require("xml2js");
+var convert = require("xml-js");
 const walk = require("walk");
-const { r } = require("tar");
+const path = require("path");
+const util = require("util");
 
 // const dotenv = require('dotenv');
 // dotenv.config();
@@ -38,49 +39,29 @@ const getWeather = async () => {
         console.log("The file has been saved!");
       });
       // unzip file to kmls folder
-      // const writer = unzipper.Extract({ path: `data/${randomNameZip}` });
-      // reader.on("end", () => {
-      //   readFile(randomNameZip);
-      // });
-      
       const reader = await fs.createReadStream(output);
-      reader.pipe(unzipper.Extract({ path: `data/${randomNameZip}` }));
+      await reader.pipe(unzipper.Extract({ path: `data/${randomNameZip}` }));
+      // await setTimeout(reader.pipe(unzipper.Extract({ path: `data/${randomNameZip}` })), 5000);
 
-      const walker = walk.walk(`./data`, { followLinks: false });
       const files = [];
-      walker.on("file", function (root, stat, next) {
-        files.push(`${stat.name}`);
-        next();
-      });
-
-      walker.on("end", function () {
-        const xml = files.filter((file) => file === "2D_Base.kml");
-        xml2js.parseString(xml, { mergeAttrs: true }, (err, result) => {
-          if (err) {
-            throw err;
-          }
-          let random = Math.random().toString(36).substring(7);
-          const json = JSON.stringify(result, null, 2);
-          fs.writeFileSync("json/" + random + "_new" + ".json", json);
+      walk
+        .walk(`./data`)
+        .on("file", function (root, stat, next) {
+          files.push(`${stat.name}`);
+          next();
+        })
+        .on("end", async function () {
+          const xml = await fs.readFileSync(`../read-write-file/data/${randomNameZip}/2D_Base.kml`,"utf8");
+          const result = await convert.xml2json(xml, {compact: true,spaces: 2,});
+          fs.writeFileSync("json/" + randomNameZip + "_new" + ".json", result);
+          const data = await fs.readFileSync(`json/${randomNameZip}_new.json`);
         });
-      });
     } catch (error) {
       console.log("error =>", error);
     }
     break;
   }
 };
-
-// const readFile = (randomNameZip) => {
-//   const xml = fs.readFileSync(`data/${randomNameZip}/2D_Base.kml`);
-//   xml2js.parseString(xml, { mergeAttrs: true }, (err, result) => {
-//     if (err) {
-//       throw err;
-//     } else {
-//       console.log(result);
-//     }
-//   });
-// };
 
 // const file = fs.readFileSync(`data/${output}/2D_Base.kml`, "utf8");
 // console.log(file);

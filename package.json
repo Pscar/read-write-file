@@ -9,21 +9,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "adm-zip": "^0.5.5",
     "axios": "^0.21.1",
     "dotenv": "^10.0.0",
-    "fstream": "^1.0.12",
     "mongodb": "^3.6.9",
     "mongoose": "^5.12.13",
-    "mysql": "^2.18.1",
     "mysql2": "^2.2.5",
-    "request": "^2.88.2",
+    "path": "^0.12.7",
     "sequelize": "^6.6.5",
-    "sequelize-to-json": "^0.10.4",
-    "tar": "^6.1.2",
     "unzipper": "^0.10.11",
-    "util": "^0.12.4",
     "walk": "^2.3.14",
+    "xml-js": "^1.6.11",
     "xml2js": "^0.4.23"
   }
 }
