@@ -1,65 +1,82 @@
 const { Sequelize, QueryTypes } = require("sequelize");
 const fs = require("fs");
 const axios = require("axios");
-const unzipper = require('unzipper');
+const unzipper = require("unzipper");
 const config = require("./config");
+// const dotenv = require('dotenv');
+// dotenv.config();
 
 const sequelize = new Sequelize(
   `mysql://${config.db.user}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.database}`
 );
 const getWeather = async () => {
+  // query for weather
   const weathers = await sequelize.query("SELECT kmls FROM `weathers`", {
     type: QueryTypes.SELECT,
   });
-  const kmls = weathers.map((item) => item.kmls);
+  // map weathers to kmls
+  const kmls = await weathers.map((item) => item.kmls);
+  // loop array kmls in database
   for (const data of kmls) {
+    // string kmls to array
     const url = `https://weather.ckartisan.com/storage/${data}`;
+    // random name for zip file
     let random = Math.random().toString(36).substring(7);
-    const output = `kmls/${random}.zip`;
+    // output location file .zip
+    const randomNameZip = `${random}.zip`;
+    const output = `kmls/${randomNameZip}`;
     try {
+      // get response from url to axios type array buffer
       const response = await axios.get(url, { responseType: "arraybuffer" });
-      fs.writeFileSync(output, response.data, (err) => {
+      // write file to output location .zip
+      await fs.writeFileSync(output, response.data, (err) => {
         if (err) throw err;
         console.log("The file has been saved!");
       });
-      fs.createReadStream(output).pipe(
-        unzipper.Extract({ path: `data/${output}` })
-      );
+      // unzip file to kmls folder
+      await fs.createReadStream(output).pipe(unzipper.Extract({ path: `data/${randomNameZip}` }));
+      const file = fs.readFileSync(`data/${randomNameZip}/2D_Base.kml`, "utf8");
+      console.log(file);
+
+
+      // fs.writeFileSync("json/" + random + "_new" + ".json", json);
+      // await fs.createReadStream(output).pipe(
+      //   unzipper
+      //     .Extract({ path: `data/${randomNameZip}` })
+      //     .on("entry", function (entry) {
+      //       const fileName = entry.path;
+      //       console.log(fileName);
+      //       if (fileName === "2D_Base.kml") {
+      //         entry.pipe(fs.createWriteStream(`data/${randomNameZip}`));
+      //       } else {
+      //         entry.autodrain();
+      //       }
+      //     })
+      // );
     } catch (error) {
-      console.log(error);
+      console.log("error =>", error);
     }
     break;
   }
 };
 
 getWeather();
-// const con = mysql.createConnection({
-//   host: config.db.host,
-//   user: config.db.user,
-//   password: config.db.password,
-//   database: config.db.database,
+// const file = fs.readFileSync(`data/${output}/2D_Base.kml`, "utf8");
+// console.log(file);
+// const readFile = () => {
+//   const file = fs.readFileSync(`data/${output}/2D_Base.kml`, "utf8");
+//   console.log(file);
+//   const json = JSON.stringify(file, null, 2);
+//   fs.writeFileSync("json/" + random + "_new" + ".json", json);
+// };
+// read file in folder from 2D_Base.kml data/output/2D_Base.kml
+// const file = fs.readFileSync(`data/${output}/2D_Base.kml`, "utf8");
+// console.log(file);
+// fs.readdirSync(fileKmls).forEach((file) => {
+//   console.log(file);
+//   const json = JSON.stringify(file, null, 2);
+//   fs.writeFileSync("json/" + random + "_new" + ".json", json);
 // });
-
-// con.connect(function (err) {
-//   if (err) throw err;
-//   con.query("SELECT kmls FROM weathers", function (err, result, fields) {
-//     if (err) throw err;
-//     for (const data of result) {
-//       const url = `https://weather.ckartisan.com/storage/${data.kmls}`;
-//       // let random = Math.random().toString(36).substring(7);
-//       // const dir = __dirname + "/upload";
-//       // fs.mkdirSync(dir);
-//       // const output = ` ${random}.zip`;
-//       // request({ url: url, encoding: null }, function (err, resp, body) {
-//       //   if (err) throw err;
-//       //   fs.writeFileSync(output, body, function (err) {
-//       //     console.log("file written!");
-//       //   });
-//       // });
-//     }
-//   });
-// });
-
 // const data = require('./o2s6uc.json');
 // const fs = require('fs');
 
