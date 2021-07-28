@@ -3,7 +3,6 @@ const fs = require("fs");
 const axios = require("axios");
 const unzipper = require("unzipper");
 const config = require("./config");
-// var convert = require("xml-js");
 const xml2js = require("xml2js");
 
 const walk = require("walk");
