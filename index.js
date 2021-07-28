@@ -3,10 +3,11 @@ const fs = require("fs");
 const axios = require("axios");
 const unzipper = require("unzipper");
 const config = require("./config");
-var convert = require("xml-js");
+// var convert = require("xml-js");
+const xml2js = require("xml2js");
+
 const walk = require("walk");
-const path = require("path");
-const util = require("util");
+const console = require("console");
 
 // const dotenv = require('dotenv');
 // dotenv.config();
@@ -43,6 +44,7 @@ const getWeather = async () => {
       await reader.pipe(unzipper.Extract({ path: `data/${randomNameZip}` }));
       // await setTimeout(reader.pipe(unzipper.Extract({ path: `data/${randomNameZip}` })), 5000);
 
+      // read file in folder from 2D_Base.kml data/output/2D_Base.kml
       const files = [];
       walk
         .walk(`./data`)
@@ -51,10 +53,102 @@ const getWeather = async () => {
           next();
         })
         .on("end", async function () {
-          const xml = await fs.readFileSync(`../read-write-file/data/${randomNameZip}/2D_Base.kml`,"utf8");
-          const result = await convert.xml2json(xml, {compact: true,spaces: 2,});
-          fs.writeFileSync("json/" + randomNameZip + "_new" + ".json", result);
-          const data = await fs.readFileSync(`json/${randomNameZip}_new.json`);
+          const xml = await fs.readFileSync(
+            `../read-write-file/data/${randomNameZip}/2D_Base.kml`,
+            "utf8"
+          );
+          xml2js.parseString(xml, { mergeAttrs: true }, (err, result) => {
+            if (err) {
+              throw err;
+            } else {
+              const data_center_of_map = () => {
+                const center_of_map = result.kml.Document[0].LookAt.map(
+                  (doc_item) => {
+                    let param_doc = [];
+                    param_doc = doc_item;
+                    return param_doc;
+                  }
+                );
+                return center_of_map;
+              };
+              const data_polygons = () => {
+                // console.log(result.kml.Document[0].Folder[4].Placemark);
+                const polygons = result.kml.Document[0].Folder[4].Placemark.map(
+                  (blue_item) => {
+                    let param_blue = [];
+                    param_blue = blue_item;
+
+                    let str =
+                      param_blue.MultiGeometry[0].Polygon[0].outerBoundaryIs[0].LinearRing[0].coordinates[0].toString();
+                    let datas_str = str.split("\r\n");
+                    let result_datas = datas_str.filter(
+                      (data_str) => data_str !== undefined && data_str !== ""
+                    );
+
+                    let res_datas = result_datas.map((item) => {
+                      let temp = item.trim().split(",");
+                      //return temp;
+                      return {
+                        longitude: temp[0],
+                        latitude: temp[1],
+                      };
+                    });
+                    //return res_datas;
+                    return {
+                      name: param_blue.name[0],
+                      coordinates: res_datas,
+                    };
+                  }
+                );
+                return polygons;
+              };
+              const data_boundary = () => {
+                let str =
+                  result.kml.Document[0].Folder[6].Placemark[0].MultiGeometry[0].LineString[0].coordinates[0].toString();
+                let datas_str = str.split("\r\n");
+                let result_datas = datas_str.filter(
+                  (data_str) => data_str !== undefined && data_str !== ""
+                );
+
+                let res_datas = result_datas.map((item) => {
+                  let temp = item.trim().split(",");
+                  return {
+                    longitude: temp[0],
+                    latitude: temp[1],
+                  };
+                });
+                return {
+                  coordinates: res_datas,
+                };
+              };
+              const json = () => {
+                const data_center = data_center_of_map();
+                const data_bon = data_boundary();
+                const data_poly = data_polygons();
+
+                const input = { rains: {}, waters: {}, dem: {} };
+                const center = {
+                  latitude: data_center[0].latitude[0],
+                  longitude: data_center[0].longitude[0],
+                };
+
+                const myObj = {
+                  input: input,
+                  center_of_map: center,
+                  polygons: data_poly,
+                  boundary: data_bon,
+                };
+
+                return myObj;
+              };
+              const jsons = json();
+              const writeFile = () => {
+                const json = JSON.stringify(jsons, null, 2);
+                fs.writeFileSync("json/" + randomNameZip + ".json", json);
+              };
+              writeFile();
+            }
+          });
         });
     } catch (error) {
       console.log("error =>", error);
@@ -62,107 +156,4 @@ const getWeather = async () => {
     break;
   }
 };
-
-// const file = fs.readFileSync(`data/${output}/2D_Base.kml`, "utf8");
-// console.log(file);
-// const readFile = () => {
-//   const file = fs.readFileSync(`data/${output}/2D_Base.kml`, "utf8");
-//   console.log(file);
-//   const json = JSON.stringify(file, null, 2);
-//   fs.writeFileSync("json/" + random + "_new" + ".json", json);
-// };
-// read file in folder from 2D_Base.kml data/output/2D_Base.kml
-// const file = fs.readFileSync(`data/${output}/2D_Base.kml`, "utf8");
-// console.log(file);
-// fs.readdirSync(fileKmls).forEach((file) => {
-//   console.log(file);
-//   const json = JSON.stringify(file, null, 2);
-//   fs.writeFileSync("json/" + random + "_new" + ".json", json);
-// });
-// const data = require('./o2s6uc.json');
-// const fs = require('fs');
-
-// let doc = data.kml.Document;
-
-// function data_center_of_map() {
-//   const center_of_map = doc[0].LookAt.map(doc_item => {
-//     let param_doc = [];
-//     param_doc = doc_item;
-//     return param_doc
-//   })
-//   return center_of_map
-// }
-
-// function data_polygons() {
-//   const polygons = doc[0].Folder[4].Placemark.map(blue_item => {
-//     let param_blue = [];
-//     param_blue = blue_item;
-
-//     let str = param_blue.MultiGeometry[0].Polygon[0].outerBoundaryIs[0].LinearRing[0].coordinates[0].toString();
-//     let datas_str = str.split("\r\n");
-//     let result_datas = datas_str.filter(data_str => data_str !== undefined && data_str !== '');
-
-//     let res_datas = result_datas.map(item => {
-//       let temp = item.trim().split(",")
-//       //return temp;
-//       return {
-//         "longitude": temp[0],
-//         "latitude": temp[1],
-//       }
-//     })
-//     //return res_datas;
-//     return {
-//       "name": param_blue.name[0],
-//       "coordinates": res_datas
-//     }
-//   })
-//   return polygons
-// }
-
-// function data_boundary() {
-
-//   let str = doc[0].Folder[6].Placemark[0].MultiGeometry[0].LineString[0].coordinates[0].toString();
-//   let datas_str = str.split("\r\n");
-//   let result_datas = datas_str.filter(data_str => data_str !== undefined && data_str !== '');
-
-//   let res_datas = result_datas.map(item => {
-//     let temp = item.trim().split(",")
-//     return {
-//       "longitude": temp[0],
-//       "latitude": temp[1],
-//     }
-//   })
-//   return {
-//     "coordinates": res_datas
-//   }
-
-// }
-
-// function json() {
-//   const data_center = data_center_of_map();
-//   const data_bon = data_boundary();
-//   const data_poly = data_polygons();
-
-//   const input = { rains: {}, waters: {}, dem: {} }
-//   const center = { latitude: data_center[0].latitude[0], longitude: data_center[0].longitude[0] }
-
-//   const myObj = {
-//     input: input,
-//     center_of_map: center,
-//     polygons: data_poly,
-//     boundary: data_bon
-//   };
-
-//   return myObj
-
-// }
-// const jsons = json();
-
-// const writeFile = () => {
-//   let random = Math.random().toString(36).substring(7);
-//   const json = JSON.stringify(jsons, null, 2);
-//   fs.writeFileSync('json/' + random + "_new" + '.json', json);
-// }
-// writeFile();
-
 getWeather();
