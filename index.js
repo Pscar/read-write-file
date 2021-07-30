@@ -8,7 +8,9 @@ const xml2js = require("xml2js");
 // const dotenv = require('dotenv');
 // dotenv.config();
 
-const sequelize = new Sequelize(`mysql://${config.db.user}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.database}`);
+const sequelize = new Sequelize(
+  `mysql://${config.db.user}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.database}`
+);
 
 const getWeather = async () => {
   // query for weather
@@ -19,9 +21,11 @@ const getWeather = async () => {
   const kmls = await weathers.map((item) => item.kmls);
   // loop array kmls in database
   console.log("length", kmls.length);
+  let number = 0;
   for await (const data of kmls) {
     // string kmls to array
     const url = `https://weather.ckartisan.com/storage/${data}`;
+    console.log("url", url);
     // random name for zip file
     let random = Math.random().toString(36).substring(7);
     // output location file .zip
@@ -30,39 +34,41 @@ const getWeather = async () => {
     try {
       // get response from url to axios type array buffer
       const response = await axios.get(url, { responseType: "arraybuffer" });
+
       // write file to output location .zip
       await fs.writeFileSync(output, response.data, (err) => {
         if (err) throw err;
         console.log("The file has been saved!");
       });
+      // // unzip file to kmls folder
+      await unZip(output, randomNameZip, number);
 
-      // unzip file to kmls folder
-      await unZip(output, randomNameZip);
+      number += 1;
       // read file kmls
       const xml = await fs.readFileSync(
-        `data/${randomNameZip}/2D_Base.kml`,
+        `data/${number}_${randomNameZip}/2D_Base.kml`,
         "utf8"
       );
-      await writeJson(xml, randomNameZip);
-
+      await writeJson(xml, randomNameZip, number);
     } catch (error) {
       console.log("error =>", error);
     }
-    break;
+    // break;
   }
 };
 
-const unZip = async (output, randomNameZip) => {
+const unZip = async (output, randomNameZip, number) => {
   return new Promise((resolve, reject) => {
+    number += 1;
     const reader = fs.createReadStream(output);
     reader
-      .pipe(unzipper.Extract({ path: `data/${randomNameZip}` }))
+      .pipe(unzipper.Extract({ path: `data/${number}_${randomNameZip}` }))
       .on("error", reject)
       .on("finish", resolve);
   });
 };
 
-const writeJson = async (xml, randomNameZip) => {
+const writeJson = async (xml, randomNameZip, number) => {
   xml2js.parseString(xml, { mergeAttrs: true }, (err, result) => {
     if (err) {
       throw err;
@@ -136,19 +142,30 @@ const writeJson = async (xml, randomNameZip) => {
           longitude: data_center[0].longitude[0],
         };
 
-        const myObj = {
-          input: input,
-          center_of_map: center,
-          polygons: data_poly,
-          boundary: data_bon,
-        };
+        const myObj = [
+          {
+            input: input,
+            center_of_map: center,
+            polygons: data_poly,
+            boundary: data_bon,
+          },
+        ];
+        // const myObj = {
+        //   input: input,
+        //   center_of_map: center,
+        //   polygons: data_poly,
+        //   boundary: data_bon,
+        // };
 
         return myObj;
       };
       const jsons = data_Json();
+
       const writeFile = () => {
-        const json = JSON.stringify(jsons, null, 2);
-        fs.writeFileSync("json/" + randomNameZip + ".json", json);
+        for (const fileJson of jsons) {
+          const json = JSON.stringify(fileJson,null,2);
+          fs.writeFileSync("json/" + `${number}_${randomNameZip}` + ".json", json);
+        }
       };
       writeFile();
     }
