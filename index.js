@@ -4,7 +4,11 @@ const axios = require("axios");
 const unzipper = require("unzipper");
 const config = require("./config");
 const xml2js = require("xml2js");
-
+const MongoClient = require("mongodb").MongoClient;
+const mongoParams = { useNewUrlParser: true, useUnifiedTopology: true };
+const url_db =
+  "mongodb://localhost:27017/rtfloodbma?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false";
+const client = new MongoClient(url_db, mongoParams);
 // const dotenv = require('dotenv');
 // dotenv.config();
 
@@ -49,11 +53,11 @@ const getWeather = async () => {
         `data/${number}_${randomNameZip}/2D_Base.kml`,
         "utf8"
       );
-      await writeJson(xml, randomNameZip, number);
+      await writeJson(xml,randomNameZip, number);
     } catch (error) {
       console.log("error =>", error);
     }
-    // break;
+    //break;
   }
 };
 
@@ -69,107 +73,129 @@ const unZip = async (output, randomNameZip, number) => {
 };
 
 const writeJson = async (xml, randomNameZip, number) => {
-  xml2js.parseString(xml, { mergeAttrs: true }, (err, result) => {
-    if (err) {
-      throw err;
-    } else {
-      const data_center_of_map = () => {
-        const center_of_map = result.kml.Document[0].LookAt.map((doc_item) => {
-          let param_doc = [];
-          param_doc = doc_item;
-          return param_doc;
-        });
-        return center_of_map;
-      };
-      const data_polygons = () => {
-        // console.log(result.kml.Document[0].Folder[4].Placemark);
-        const polygons = result.kml.Document[0].Folder[4].Placemark.map(
-          (blue_item) => {
-            let param_blue = [];
-            param_blue = blue_item;
+  return new Promise((resolve, reject) => {
+    xml2js.parseString(xml, { mergeAttrs: true }, (err, result) => {
+      if (err) {
+        // throw err;
+        reject(err);
+      } else {
+        resolve(result);
+        const data_center_of_map = () => {
+          const center_of_map = result.kml.Document[0].LookAt.map(
+            (doc_item) => {
+              let param_doc = [];
+              param_doc = doc_item;
+              return param_doc;
+            }
+          );
+          return center_of_map;
+        };
+        const data_polygons = () => {
+          // console.log(result.kml.Document[0].Folder[4].Placemark);
+          const polygons = result.kml.Document[0].Folder[4].Placemark.map(
+            (blue_item) => {
+              let param_blue = [];
+              param_blue = blue_item;
 
-            let str =
-              param_blue.MultiGeometry[0].Polygon[0].outerBoundaryIs[0].LinearRing[0].coordinates[0].toString();
-            let datas_str = str.split("\r\n");
-            let result_datas = datas_str.filter(
-              (data_str) => data_str !== undefined && data_str !== ""
-            );
+              let str =
+                param_blue.MultiGeometry[0].Polygon[0].outerBoundaryIs[0].LinearRing[0].coordinates[0].toString();
+              let datas_str = str.split("\r\n");
+              let result_datas = datas_str.filter(
+                (data_str) => data_str !== undefined && data_str !== ""
+              );
 
-            let res_datas = result_datas.map((item) => {
-              let temp = item.trim().split(",");
-              //return temp;
+              let res_datas = result_datas.map((item) => {
+                let temp = item.trim().split(",");
+                //return temp;
+                return {
+                  longitude: temp[0],
+                  latitude: temp[1],
+                };
+              });
+              //return res_datas;
               return {
-                longitude: temp[0],
-                latitude: temp[1],
+                name: param_blue.name[0],
+                coordinates: res_datas,
               };
-            });
-            //return res_datas;
+            }
+          );
+          return polygons;
+        };
+        const data_boundary = () => {
+          let str =
+            result.kml.Document[0].Folder[6].Placemark[0].MultiGeometry[0].LineString[0].coordinates[0].toString();
+          let datas_str = str.split("\r\n");
+          let result_datas = datas_str.filter(
+            (data_str) => data_str !== undefined && data_str !== ""
+          );
+
+          let res_datas = result_datas.map((item) => {
+            let temp = item.trim().split(",");
             return {
-              name: param_blue.name[0],
-              coordinates: res_datas,
+              longitude: temp[0],
+              latitude: temp[1],
             };
-          }
-        );
-        return polygons;
-      };
-      const data_boundary = () => {
-        let str =
-          result.kml.Document[0].Folder[6].Placemark[0].MultiGeometry[0].LineString[0].coordinates[0].toString();
-        let datas_str = str.split("\r\n");
-        let result_datas = datas_str.filter(
-          (data_str) => data_str !== undefined && data_str !== ""
-        );
-
-        let res_datas = result_datas.map((item) => {
-          let temp = item.trim().split(",");
+          });
           return {
-            longitude: temp[0],
-            latitude: temp[1],
+            coordinates: res_datas,
           };
-        });
-        return {
-          coordinates: res_datas,
         };
-      };
-      const data_Json = () => {
-        const data_center = data_center_of_map();
-        const data_bon = data_boundary();
-        const data_poly = data_polygons();
+        const data_Json = () => {
+          const data_center = data_center_of_map();
+          const data_bon = data_boundary();
+          const data_poly = data_polygons();
 
-        const input = { rains: {}, waters: {}, dem: {} };
-        const center = {
-          latitude: data_center[0].latitude[0],
-          longitude: data_center[0].longitude[0],
-        };
+          const input = { rains: {}, waters: {}, dem: {} };
+          const center = {
+            latitude: data_center[0].latitude[0],
+            longitude: data_center[0].longitude[0],
+          };
 
-        const myObj = [
-          {
+          // const myObj = [
+          //   {
+          //     input: input,
+          //     center_of_map: center,
+          //     polygons: data_poly,
+          //     boundary: data_bon,
+          //   },
+          // ];
+          const myObj = {
             input: input,
             center_of_map: center,
             polygons: data_poly,
             boundary: data_bon,
-          },
-        ];
-        // const myObj = {
-        //   input: input,
-        //   center_of_map: center,
-        //   polygons: data_poly,
-        //   boundary: data_bon,
-        // };
+          };
 
-        return myObj;
-      };
-      const jsons = data_Json();
+          return myObj;
+        };
+        const jsons = data_Json();
 
-      const writeFile = () => {
-        for (const fileJson of jsons) {
-          const json = JSON.stringify(fileJson,null,2);
-          fs.writeFileSync("json/" + `${number}_${randomNameZip}` + ".json", json);
-        }
-      };
-      writeFile();
-    }
+        const writeFile = () => {
+          // for (const [key, value] of Object.entries(jsons)) {
+          // const json = JSON.stringify(jsons, null, 2);
+          // fs.writeFileSync("json/" + `${number}_${randomNameZip}` + ".json",json);
+          client.connect(async (err) => {
+            if (err) {
+              console.log(err.message);
+              throw new Error("failed to connect");
+            }
+            let datab = client.db("rtfloodbma");
+            console.log("db connected");
+
+            for await (const [key, value] of Object.entries(jsons)) {
+              const json = JSON.stringify(jsons, null, 2);
+              fs.writeFileSync("json/" + `${number}_${randomNameZip}` + ".json",json);
+              datab.collection("kmls").insertOne(jsons);
+              console.log("insert succeeded kmls", key, value);
+            }
+
+          });
+        };
+        writeFile();
+      }
+      //}
+    });
   });
 };
-
+console.log(typeof writeJson);
 getWeather();
