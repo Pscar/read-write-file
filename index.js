@@ -2,15 +2,25 @@ const { Sequelize, QueryTypes } = require("sequelize");
 const fs = require("fs");
 const axios = require("axios");
 const unzipper = require("unzipper");
-const config = require("./config");
+// const config = require("./config");
 const xml2js = require("xml2js");
 const MongoClient = require("mongodb").MongoClient;
 const mongoParams = { useNewUrlParser: true, useUnifiedTopology: true };
 const url_db =
   "mongodb://localhost:27017/rtfloodbma?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false";
 const client = new MongoClient(url_db, mongoParams);
-// const dotenv = require('dotenv');
-// dotenv.config();
+
+const dotenv = require("dotenv");
+dotenv.config();
+const config = {
+  db: {
+    host: process.env.HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DATABASE,
+    port: process.env.PORT,
+  },
+};
 
 const sequelize = new Sequelize(
   `mysql://${config.db.user}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.database}`
@@ -56,7 +66,6 @@ const getWeather = async () => {
         "utf8"
       );
       await writeXmltoJson(xml, randomNameZip, number, random);
-
     } catch (error) {
       console.log("error =>", error);
     }
