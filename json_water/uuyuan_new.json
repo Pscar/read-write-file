@@ -2,8 +2,8 @@
   "success": true,
   "data": [
     {
-      "id": 496251217,
-      "waterlevel_datetime": "2021-06-21 20:50",
+      "id": 496544422,
+      "waterlevel_datetime": "2021-06-22 17:20",
       "waterlevel_m": null,
       "waterlevel_msl": "51.16",
       "waterlevel_msl_previous": "51.16",
@@ -76,7 +76,7 @@
           "th": "นครศรีธรรมราช"
         }
       },
-      "_id": "496251217_795",
+      "_id": "496544422_795",
       "$setOnInsert": {
         "__v": 0
       }
