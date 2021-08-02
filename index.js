@@ -12,6 +12,7 @@ const client = new MongoClient(url_db, mongoParams);
 
 const dotenv = require("dotenv");
 dotenv.config();
+
 const config = {
   db: {
     host: process.env.HOST,
@@ -69,7 +70,7 @@ const getWeather = async () => {
     } catch (error) {
       console.log("error =>", error);
     }
-    //break;
+    break;
   }
 };
 
