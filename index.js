@@ -7,7 +7,7 @@ const xml2js = require("xml2js");
 const MongoClient = require("mongodb").MongoClient;
 const mongoParams = { useNewUrlParser: true, useUnifiedTopology: true };
 const url_db =
-  "mongodb://localhost:27017/rtfloodbma?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false";
+  "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false";
 const client = new MongoClient(url_db, mongoParams);
 
 const dotenv = require("dotenv");
@@ -15,17 +15,18 @@ dotenv.config();
 
 const config = {
   db: {
-    host: process.env.HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DATABASE,
+    host: process.env.HOST,
     port: process.env.PORT,
+    database: process.env.DATABASE,
   },
 };
 
 const sequelize = new Sequelize(
   `mysql://${config.db.user}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.database}`
 );
+console.log(sequelize)
 
 const getWeather = async () => {
   // query for weather
@@ -34,7 +35,7 @@ const getWeather = async () => {
   });
   // map weathers to kmls
   const kmls = await weathers.map((item) => item.kmls);
-  // loop array kmls in database
+  // // loop array kmls in database
   console.log("length", kmls.length);
   let number = 0;
   for await (const data of kmls) {
@@ -115,8 +116,8 @@ const writeXmltoJson = async (xml, random) => {
               let temp = item.trim().split(",");
               //return temp;
               return {
-                longitude: temp[0],
-                latitude: temp[1],
+                lat: parseFloat(temp[1]),
+                lng: parseFloat(temp[0]),
               };
             });
             //return res_datas;
@@ -139,8 +140,8 @@ const writeXmltoJson = async (xml, random) => {
         let res_datas = result_datas.map((item) => {
           let temp = item.trim().split(",");
           return {
-            longitude: temp[0],
-            latitude: temp[1],
+            lat: parseFloat(temp[1]),
+            lng: parseFloat(temp[0]),
           };
         });
         return {
@@ -155,8 +156,8 @@ const writeXmltoJson = async (xml, random) => {
 
         const input = { rains: {}, waters: {}, dem: {} };
         const center = {
-          latitude: data_center[0].latitude[0],
-          longitude: data_center[0].longitude[0],
+          lat: parseFloat(data_center[0].latitude[0]),
+          lng: parseFloat(data_center[0].longitude[0]),
         };
 
         const myObj = {
