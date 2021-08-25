@@ -26,7 +26,6 @@ const config = {
 const sequelize = new Sequelize(
   `mysql://${config.db.user}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.database}`
 );
-console.log(sequelize)
 
 const getWeather = async () => {
   // query for weather
@@ -161,7 +160,6 @@ const writeXmltoJson = async (xml, random) => {
         };
 
         const myObj = {
-          _id: random,
           input: input,
           center_of_map: center,
           polygons: data_poly,
